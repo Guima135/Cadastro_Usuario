@@ -1,3 +1,7 @@
+from datetime import datetime
+data_cadastro = datetime.now()
+
+
 def mostrar_opcoes():
     return print('Escolha uma das seguintes opções do sistema:\n'
                  '(1) adicionar usuário, '
@@ -15,35 +19,94 @@ def opcao():
             print("\nPor favor, digite um número inteiro, dente 1 a 5.")
 
 
-def exibir_usuario_adicionado(alunos):
-    print('Alunos adicionados:')
-    for usuario, valores in alunos.items():
-        print(f' Código: {usuario}| Nome: {valores['nome']}| Idade: {valores['idade']}| Gênero: {valores['gênero']}\n')
-
-
-def adicionar_usuario(usuarios):
-
+def inserir_apelido():
+    global apelido
     apelido = input('Insira apelido: ')
-    nome = input('Insira nome: ')
-    idade = int(input('Insira idade: '))
-    genero = input('Insira genero: ')
-
-    usuarios[apelido] = {'nome': nome, 'idade': idade, 'gênero': genero}
     try:
         with open('usuarios.txt', 'r', encoding='utf-8') as arquivo:
             linhas = arquivo.readlines()
             for linha in linhas:
                 if f'Código: {apelido}' in linha:
-                    print("Usuário já existe no arquivo.")
+                    print("Usuário já existe no arquivo.\n")
                     return
-
     except FileNotFoundError:
         with open('usuarios.txt', 'w', encoding='utf-8') as arquivo:
             arquivo.write('Lista de usuários: ')
 
+
+def inserir_nome():
+    global nome_completo
+    while True:
+        nome = input('Insira primeiro nome: ')
+        sobrenome = input('Insira um sobrenome: ')
+        if nome.isalpha() and sobrenome.isalpha():
+            nome_completo = nome.capitalize() + ' ' + sobrenome.capitalize()
+            print('Nome inserido: ', nome_completo)
+            break
+        else:
+            print('Insira o formato correto!\n')
+
+
+def inserir_idade():
+    global idade
+    while True:
+        try:
+            idade = int(input('Insira idade: '))
+            if idade >= 18:
+                break
+            else:
+                print('A idade deve ser maior do que 18 anos!\n')
+        except ValueError:
+            print('A idade deve ser um número inteiro!\n')
+
+
+def inserir_genero():
+    global genero
+    print('Escolha um gênero: '
+          '(1) Masculino, '
+          '(2) Feminino, '
+          '(3) Não Binário, '
+          '(4) Outro\n')
+
+    while True:
+        escolher = int(input('Opção: '))
+        if escolher == 1:
+            genero = 'Masculino'
+            break
+
+        elif escolher == 2:
+            genero = 'Feminino'
+            break
+        elif escolher == 3:
+            genero = 'Não Binário'
+            break
+        elif escolher == 4:
+            genero = input('Insira seu gênero: ')
+            break
+        else:
+            print('Opção inválida!\n')
+
+    print('Gênero inserido:', genero.capitalize(), '\n')
+
+
+def cadastrar_usuario(usuarios):
+    global nome_completo
+
+    inserir_apelido()
+    inserir_nome()
+    inserir_idade()
+    inserir_genero()
+
+    data = data_cadastro.strftime("%Y-%m-%d")
+    usuarios[apelido] = {'nome': nome_completo, 'idade': idade, 'gênero': genero, 'data_cadastro': data}
+
     with open('usuarios.txt', 'a', encoding='utf-8') as arquivo:
-        arquivo.write(f' Código: {apelido}| Nome: {nome}| Idade: {idade}| Gênero: {genero}\n')
-        print('Usuário cadastrado')
+        arquivo.write(f' Código: {apelido}| '
+                      f'Nome: {nome_completo}| '
+                      f'Idade: {idade}| '
+                      f'Gênero: {genero}| '
+                      f'Data de cadastro: {data}\n')
+        print('Usuário cadastrado.\n')
 
 
 def alterar_apelido(usuarios):

@@ -10,7 +10,7 @@ while opcao_escolhida != 5:
     opcao_escolhida = opcao()
 
     if opcao_escolhida == 1:
-        adicionar_usuario(usuarios)
+       cadastrar_usuario(usuarios)
 
     elif opcao_escolhida == 2:
         remover_usuario()
