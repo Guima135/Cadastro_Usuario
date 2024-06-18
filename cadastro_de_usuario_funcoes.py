@@ -1,86 +1,106 @@
-from datetime import datetime
+import re
+import json
+from datetime import datetime, date
 data_cadastro = datetime.now()
+users = {}
+
+age = None
+nickname = None
+name = None
+genero = None
+email = None
+endereco = None
 
 
-def mostrar_opcoes():
-    return print('Escolha uma das seguintes opções do sistema:\n'
-                 '(1) adicionar usuário, '
-                 '(2) remover usuário, '
-                 '(3) alterar apelido, '
-                 '(4) visualizar lista de usuários, '
-                 '(5) sair')
+def show_options():
+    return print('Choose one of the following options:\n'
+                 '(1) Create User, '
+                 '(2) Remove User, '
+                 '(3) Alter Nickname, '
+                 '(4) Visualize Registered Users, '
+                 '(5) Exit')
 
 
-def opcao():
+def option():
     while True:
         try:
-            return int(input('\nOpção: '))
+            return int(input('\nOption: '))
         except ValueError:
-            print("\nPor favor, digite um número inteiro, dente 1 a 5.")
+            print("\nYou must insert an integer between 1 and 5")
 
 
 def inserir_apelido():
-    global apelido
-    apelido = input('Insira apelido: ')
+    global nickname
+    nickname = input('Insert nickname: ')
     try:
-        with open('usuarios.txt', 'r', encoding='utf-8') as arquivo:
-            linhas = arquivo.readlines()
-            for linha in linhas:
-                if f'Código: {apelido}' in linha:
-                    print("Usuário já existe no arquivo.\n")
+        with open("dados.json", "r", encoding='utf-8') as file:
+            json_data = json.load(file)
+            for key, value in json_data.items():
+                if key == nickname:
+                    print("Nickname already in use.\n")
                     return
     except FileNotFoundError:
-        with open('usuarios.txt', 'w', encoding='utf-8') as arquivo:
-            arquivo.write('Lista de usuários: ')
+        with open("dados.json", "w", encoding='utf-8') as file:
+            json.dump(users, file, indent=4)
 
 
 def inserir_nome():
-    global nome_completo
+    global name
     while True:
-        nome = input('Insira primeiro nome: ')
+        first_name = input('Insira primeiro nome: ')
         sobrenome = input('Insira um sobrenome: ')
-        if nome.isalpha() and sobrenome.isalpha():
-            nome_completo = nome.capitalize() + ' ' + sobrenome.capitalize()
-            print('Nome inserido: ', nome_completo)
+        if first_name.isalpha() and sobrenome.isalpha():
+            name = first_name.capitalize() + ' ' + sobrenome.capitalize()
+            print('Nome inserido: ', name)
             break
         else:
             print('Insira o formato correto!\n')
 
 
-def inserir_idade():
-    global idade
+def inserir_data_nascimento():
+    global age
+
     while True:
-        try:
-            idade = int(input('Insira idade: '))
-            if idade >= 18:
+        while True:
+            try:
+                nascimento = input("Digite sua data de nascimento (dd/mm/aaaa): ")
+                nascimento_date = datetime.strptime(nascimento, "%d/%m/%Y").date()
                 break
-            else:
-                print('A idade deve ser maior do que 18 anos!\n')
-        except ValueError:
-            print('A idade deve ser um número inteiro!\n')
+            except ValueError:
+                print('Formato incorreto')
+
+        hoje = date.today()
+        age = hoje.year - nascimento_date.year
+        if hoje.month < nascimento_date.month or \
+                (hoje.month == nascimento_date.month and hoje.day < nascimento_date.day):
+            age -= 1
+        if age >= 18:
+            break
+        else:
+            print('Você não deve ter menos de 18 anos!')
 
 
 def inserir_genero():
     global genero
-    print('Escolha um gênero: '
-          '(1) Masculino, '
-          '(2) Feminino, '
-          '(3) Não Binário, '
-          '(4) Outro\n')
+    print('Choose a gender: '
+          '(1) Male, '
+          '(2) Female, '
+          '(3) Non-binary, '
+          '(4) Other\n')
 
     while True:
-        escolher = int(input('Opção: '))
-        if escolher == 1:
-            genero = 'Masculino'
+        choose = int(input('Option: '))
+        if choose == 1:
+            genero = 'Male'
             break
 
-        elif escolher == 2:
-            genero = 'Feminino'
+        elif choose == 2:
+            genero = 'Female'
             break
-        elif escolher == 3:
-            genero = 'Não Binário'
+        elif choose == 3:
+            genero = 'Non-binary'
             break
-        elif escolher == 4:
+        elif choose == 4:
             genero = input('Insira seu gênero: ')
             break
         else:
@@ -89,64 +109,81 @@ def inserir_genero():
     print('Gênero inserido:', genero.capitalize(), '\n')
 
 
-def cadastrar_usuario(usuarios):
-    global nome_completo
+def inserir_email():
+    global email
+    padrao_email = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+    while True:
+        try:
+            email = input("Por favor, insira seu e-mail: ")
+            if re.match(padrao_email, email):
+                print("E-mail válido.")
+                break
+        except ValueError:
+            print("Formato de e-mail inválido. Tente novamente.")
+
+
+def inserir_endereco():
+    global endereco
+
+    logradouro = input('Logradouro: ')
+    while True:
+        try:
+            numero = input('Número: ')
+            if numero.isdigit():
+                break
+        except ValueError:
+            print('Valor incorreto.\n')
+
+    cidade = input('Cidade: ')
+    estado = input('Estado: ')
+    while True:
+        try:
+            cep = input('CEP: ')
+            if len(cep) == 8 and cep.isdigit():
+                break
+            else:
+                print('O CEP deve possuir 8 dígitos numéricos.\n')
+        except ValueError:
+            print('Valor incorreto.\n')
+
+    endereco = logradouro + ', ' + numero + ' - ' + cidade + '/' + estado + ' - ' + cep
+
+
+def cadastrar_usuario():
+    global users
 
     inserir_apelido()
     inserir_nome()
-    inserir_idade()
+    inserir_data_nascimento()
     inserir_genero()
+    inserir_email()
+    inserir_endereco()
+
+    # adicionar funcionalidade: gerar codigo ID automaticamente
 
     data = data_cadastro.strftime("%Y-%m-%d")
-    usuarios[apelido] = {'nome': nome_completo, 'idade': idade, 'gênero': genero, 'data_cadastro': data}
+    users[nickname] = {'name': name,
+                       'age': age,
+                       'gender': genero,
+                       'email': email,
+                       'data_cadastro': data,
+                       'endereco': endereco,
+                       }
 
-    with open('usuarios.txt', 'a', encoding='utf-8') as arquivo:
-        arquivo.write(f' Código: {apelido}| '
-                      f'Nome: {nome_completo}| '
-                      f'Idade: {idade}| '
-                      f'Gênero: {genero}| '
-                      f'Data de cadastro: {data}\n')
+    with open("dados.json", "w", encoding='utf-8') as file:
+        json.dump(users, file, indent=4)
         print('Usuário cadastrado.\n')
 
 
-def alterar_apelido(usuarios):
-    apelido_buscado = input('Insira apelido para busca: ')
-
-    for apelido in usuarios:
-        while True:
-            if apelido == apelido_buscado:
-                novo_apelido = input('Insira novo apelido: ')
-                if novo_apelido not in usuarios:
-                    usuarios[apelido] = novo_apelido
-                    break
-            else:
-                print('Usuário não encontrado!')
+def alterar_dados():
+    pass
 
 
 def remover_usuario():
-    usuario_para_excluir = input('Digite o apelido do usuário a ser excluído: ')
-
-    with open('usuarios.txt', 'r', encoding='utf-8') as f:
-        linhas = f.readlines()
-
-    for linha in linhas:
-        if usuario_para_excluir in linha:
-            with open('usuarios.txt', 'w', encoding='utf-8') as f:
-                for trecho in linhas:
-                    if usuario_para_excluir not in trecho:
-                        f.write(trecho)
-
-        else:
-            print("Linha não encontrada nesta linha")
+    pass
 
 
 def exibir_lista_usuarios():
-    with open('usuarios.txt', 'r', encoding='utf-8') as arquivo:
-        conteudo = arquivo.readlines()
-
-    alunos_totais = []
-    for linha in conteudo:
-        alunos_totais.append(linha)
-
-    for i, linha in enumerate(alunos_totais, 1):
-        print(f'{i}.{linha}')
+    with open("dados.json", "r", encoding='utf-8') as file:
+        json_data = json.load(file)
+    print(json.dumps(json_data, indent=4))

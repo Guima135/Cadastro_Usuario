@@ -1,27 +1,26 @@
 from cadastro_de_usuario_funcoes import *
 
-usuarios = {}
 
-print('Sistema de cadastro de usuários:\n')
-opcao_escolhida = 0
+print('Account Creation System:\n')
+chosen_option = 0
 
-while opcao_escolhida != 5:
-    mostrar_opcoes()
-    opcao_escolhida = opcao()
+while chosen_option != 5:
+    show_options()
+    chosen_option = option()
 
-    if opcao_escolhida == 1:
-       cadastrar_usuario(usuarios)
+    if chosen_option == 1:
+        cadastrar_usuario()
 
-    elif opcao_escolhida == 2:
+    elif chosen_option == 2:
         remover_usuario()
 
-    elif opcao_escolhida == 3:
-        alterar_apelido(usuarios)
+    elif chosen_option == 3:
+        alterar_dados()
 
-    elif opcao_escolhida == 4:
+    elif chosen_option == 4:
         exibir_lista_usuarios()
 
-    elif opcao_escolhida == 5:
+    elif chosen_option == 5:
         print('Sistema encerrado')
 
     else:
