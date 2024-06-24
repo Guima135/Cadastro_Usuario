@@ -16,7 +16,7 @@ def show_options():
     return print('Choose one of the following options:\n'
                  '(1) Create User, '
                  '(2) Remove User, '
-                 '(3) Alter Nickname, '
+                 '(3) Alter Information, '
                  '(4) Visualize Registered Users, '
                  '(5) Exit')
 
@@ -35,13 +35,12 @@ def inserir_apelido():
     try:
         with open("dados.json", "r", encoding='utf-8') as file:
             json_data = json.load(file)
-            for key, value in json_data.items():
-                if key == nickname:
-                    print("Nickname already in use.\n")
-                    return
+            if nickname in json_data:
+                print("Nickname already in use.\n")
+                return False
+        return True
     except FileNotFoundError:
-        with open("dados.json", "w", encoding='utf-8') as file:
-            json.dump(users, file, indent=4)
+        return True
 
 
 def inserir_nome():
@@ -61,13 +60,12 @@ def inserir_data_nascimento():
     global age
 
     while True:
-        while True:
-            try:
-                nascimento = input("Digite sua data de nascimento (dd/mm/aaaa): ")
-                nascimento_date = datetime.strptime(nascimento, "%d/%m/%Y").date()
-                break
-            except ValueError:
-                print('Formato incorreto')
+        try:
+            nascimento = input("Digite sua data de nascimento (dd/mm/aaaa): ")
+            nascimento_date = datetime.strptime(nascimento, "%d/%m/%Y").date()
+        except ValueError:
+            print('Formato incorreto')
+            continue
 
         hoje = date.today()
         age = hoje.year - nascimento_date.year
@@ -93,7 +91,6 @@ def inserir_genero():
         if choose == 1:
             genero = 'Male'
             break
-
         elif choose == 2:
             genero = 'Female'
             break
@@ -113,12 +110,11 @@ def inserir_email():
     global email
     padrao_email = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
     while True:
-        try:
-            email = input("Por favor, insira seu e-mail: ")
-            if re.match(padrao_email, email):
-                print("E-mail válido.")
-                break
-        except ValueError:
+        email = input("Por favor, insira seu e-mail: ")
+        if re.match(padrao_email, email):
+            print("E-mail válido.")
+            break
+        else:
             print("Formato de e-mail inválido. Tente novamente.")
 
 
@@ -127,48 +123,54 @@ def inserir_endereco():
 
     logradouro = input('Logradouro: ')
     while True:
-        try:
-            numero = input('Número: ')
-            if numero.isdigit():
-                break
-        except ValueError:
+        numero = input('Número: ')
+        if numero.isdigit():
+            break
+        else:
             print('Valor incorreto.\n')
 
     cidade = input('Cidade: ')
     estado = input('Estado: ')
     while True:
-        try:
-            cep = input('CEP: ')
-            if len(cep) == 8 and cep.isdigit():
-                break
-            else:
-                print('O CEP deve possuir 8 dígitos numéricos.\n')
-        except ValueError:
-            print('Valor incorreto.\n')
+        cep = input('CEP: ')
+        if len(cep) == 8 and cep.isdigit():
+            break
+        else:
+            print('O CEP deve possuir 8 dígitos numéricos.\n')
 
-    endereco = logradouro + ', ' + numero + ' - ' + cidade + '/' + estado + ' - ' + cep
+    endereco = f"{logradouro}, {numero} - {cidade}/{estado} - {cep}"
 
 
 def cadastrar_usuario():
     global users
+    global data_cadastro
 
-    inserir_apelido()
+    if not inserir_apelido():
+        return
+
     inserir_nome()
     inserir_data_nascimento()
     inserir_genero()
     inserir_email()
     inserir_endereco()
 
-    # adicionar funcionalidade: gerar codigo ID automaticamente
-
+    data_cadastro = datetime.now()
     data = data_cadastro.strftime("%Y-%m-%d")
-    users[nickname] = {'name': name,
-                       'age': age,
-                       'gender': genero,
-                       'email': email,
-                       'data_cadastro': data,
-                       'endereco': endereco,
-                       }
+
+    try:
+        with open("dados.json", "r", encoding='utf-8') as file:
+            users = json.load(file)
+    except FileNotFoundError:
+        users = {}
+
+    users[nickname] = {
+        'name': name,
+        'age': age,
+        'gender': genero,
+        'email': email,
+        'data_cadastro': data,
+        'endereco': endereco,
+    }
 
     with open("dados.json", "w", encoding='utf-8') as file:
         json.dump(users, file, indent=4)
@@ -176,14 +178,59 @@ def cadastrar_usuario():
 
 
 def alterar_dados():
-    pass
+    with open("dados.json", "r", encoding='utf-8') as file:
+        json_data = json.load(file)
+        try:
+            usuario_buscado = input('Selecione um usuário: ')
+            resultado_busca = json_data[usuario_buscado]
+        except KeyError:
+            print('Usuário não encontrado')
+        else:
+            print(resultado_busca)
+            print('\nEscolha um dado para ser alterado:\n'
+                  'Nome (1),'
+                  'E-mail (2),'
+                  'Endereço (3),'
+                  'Sair (4) ')
+
+            escolher = int(input('\nOpção: '))
+            if escolher == 1:
+                inserir_nome()
+                json_data[usuario_buscado]['name'] = name
+            if escolher == 2:
+                inserir_email()
+                json_data[usuario_buscado]['email'] = email
+            if escolher == 3:
+                inserir_endereco()
+                json_data[usuario_buscado]['endereco'] = endereco
+            if escolher == 4:
+                show_options()
+
+            with open('dados.json', 'w', encoding='utf-8') as file:
+                json.dump(json_data, file, indent=4)
 
 
 def remover_usuario():
-    pass
+    with open("dados.json", "r", encoding='utf-8') as file:
+        json_data = json.load(file)
+        try:
+            usuario_buscado = input('Selecione um usuário: ')
+            resultado_busca = json_data[usuario_buscado]
+        except KeyError:
+            print('Usuário não encontrado')
+        else:
+            print(resultado_busca)
+            del json_data[usuario_buscado]
+            with open("dados.json", "w", encoding='utf-8') as file:
+                json.dump(json_data, file, indent=4)
+            print('Usuário removido')
 
 
 def exibir_lista_usuarios():
     with open("dados.json", "r", encoding='utf-8') as file:
         json_data = json.load(file)
     print(json.dumps(json_data, indent=4))
+
+
+if __name__ == "__main__":
+    cadastrar_usuario()
